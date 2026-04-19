@@ -2,6 +2,7 @@
 gpt_client.py - Cliente Groq (gratuito y ultra rápido) para el bot Armelo Perro
 Obtén tu API key gratis en: https://console.groq.com
 """
+import os
 from groq import Groq
 from config import Config
 from menu import Menu
@@ -129,13 +130,14 @@ class GPTClient:
     def __init__(self):
         self._client = Groq(api_key=Config.GROQ_API_KEY)
         self._menu = Menu()
-        self._system_prompt = _build_system_prompt(self._menu.to_prompt_text())
+        self._system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+    menu_texto=self._menu.to_prompt_text()
+)
  
         # Verificar si existe el dataset de fine-tuning (evidencia académica)
-        dataset_exists = os.path.exists(DATASET_PATH)
+  
         print(f"[GPTClient] Modelo: {Config.GROQ_MODEL} ✅")
-        print(f"[GPTClient] Dataset fine-tuning: {'encontrado ✅' if dataset_exists else 'no encontrado (ejecuta fine_tune.py --generate)'}")
- 
+       
     def get_response(self, conversation_history: list[dict]) -> str:
         """
         Genera una respuesta usando Prompt Engineering sobre LLaMA 3.3 70B.
