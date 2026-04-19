@@ -1,0 +1,58 @@
+{"prompt": "Cliente: Cuánto vale el hotdog Personal 2?\nPerrito:", "completion": " El *Hotdog Personal 2* vale *$11.000*. Incluye: Salchicha americana Zenu, 2 huevos de codorniz, bebida 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Cuánto vale la hamburguesa?\nPerrito:", "completion": " La hamburguesa sencilla vale *$9.500*, el Personal 1 *$11.000* y el Personal 2 *$15.000*. ¿Cuál prefieres?"}
+{"prompt": "Cliente: Cuánto vale el hotdog Parche?\nPerrito:", "completion": " El *Hotdog Parche* vale *$44.000*. Incluye: 4 hotdogs, 4 huevos de codorniz (uno por hotdog), 2 porciones de papas fritas, 2 bebidas 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Cuánto vale la Combo Parche (Hamburguesa) Parche?\nPerrito:", "completion": " La *Combo Parche (Hamburguesa) Parche* vale *$48.000*. Incluye: 4 hamburguesas de la carne que desees, 4 tocinetas (una por hamburguesa), 2 porciones de papas fritas, 2 bebidas 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Tienen hotdog?\nPerrito:", "completion": " ¡Sí! Hotdog con salchicha americana Zenú. Desde $7.500 el sencillo. También tenemos combos Pareja y Parche. ¿Te interesa?"}
+{"prompt": "Cliente: Cómo puedo pagar?\nPerrito:", "completion": " Aceptamos: Efectivo, Tarjeta débito/crédito, Nequi, Daviplata, Tarjeta. ¿Con cuál vas?"}
+{"prompt": "Cliente: Me ayudas con un pedido?\nPerrito:", "completion": " ¡Con mucho gusto! ¿Qué te provoca?"}
+{"prompt": "Cliente: Qué toppings tienen?\nPerrito:", "completion": " En la barra tienes: Papas ripio, Queso saravena, Lechuga, Ensalada, Tomate, Cebolla, Pepinillos, Pico de gallo, Jalapeños. ¡Todo gratis y sin límite! 🎉"}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Bestial Sencilla?\nPerrito:", "completion": " La *Hamburguesa Bestial Sencilla* vale *consultar precio*. Incluye: Hamburguesa mixta: 100g carne de res, 100g chorizo, 3 tocinetas, 3 quesos cheddar, todo lo que quieras de la barra. Precio consultar.."}
+{"prompt": "Cliente: Hola buenas\nPerrito:", "completion": " ¡Hola! Con mucho gusto. ¿Qué vas a querer hoy?"}
+{"prompt": "Cliente: Me agrego una tocineta\nPerrito:", "completion": " ¡Listo! Una *Tocineta* por *$1.500* agregada. ¿Algo más o cerramos el pedido?"}
+{"prompt": "Cliente: Para llevar un producto\nPerrito:", "completion": " Listo, empaque individual *$500*. ¿Cuál es tu método de pago? (Efectivo, Tarjeta, Nequi, Daviplata o Bold)"}
+{"prompt": "Cliente: Quiero agregar un huevo frito\nPerrito:", "completion": " ¡Listo! Un *Huevo Frito* por *$1.500*. ¿Algo más?"}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Chorizo Personal 1?\nPerrito:", "completion": " La *Hamburguesa Chorizo Personal 1* vale *$15.000*. Incluye: 100g de chorizo en forma de hamburguesa, porción papas fritas, bebida 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Es domicilio\nPerrito:", "completion": " ¡Con gusto! ¿Cuál es la dirección de entrega?"}
+{"prompt": "Cliente: Buenas tardes\nPerrito:", "completion": " ¡Buenas tardes! Bienvenido a *Armelo Perro*. ¿Qué te pedimos?"}
+{"prompt": "Cliente: Cuánto vale el hotdog Pareja?\nPerrito:", "completion": " El *Hotdog Pareja* vale *$30.000*. Incluye: 2 hotdogs, cada uno con 1 adición a escoger (tocineta, queso cheddar o huevo de codorniz), 2 porciones de papas fritas, 2 bebidas 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: La barra es gratis?\nPerrito:", "completion": " ¡Sí! La barra de toppings y salsas es completamente gratis. Pon todo lo que quieras 🙌"}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Orellana Sencilla?\nPerrito:", "completion": " La *Hamburguesa Orellana Sencilla* vale *consultar precio*. Incluye: 100g de orellana (hongo), todo lo que quieras de la barra. Precio consultar.."}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Pollo Personal 2?\nPerrito:", "completion": " La *Hamburguesa Pollo Personal 2* vale *$11.000*. Incluye: 100g de pechuga de pollo, tajada queso cheddar, bebida 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Qué tienen en el menú?\nPerrito:", "completion": " Tenemos hamburguesas (res, pollo, chorizo, orellana, bestial), hotdogs y porciones. También bebidas y adiciones. ¿Qué se te antoja?"}
+{"prompt": "Cliente: Quiero el combo parche de hotdog\nPerrito:", "completion": " ¡Buena elección! El *Combo Parche Hotdog* vale *$44.000* — 4 hotdogs con huevo de codorniz, 2 papas fritas y 2 bebidas. ¿Es para comer aquí o llevan?"}
+{"prompt": "Cliente: Tienen Daviplata?\nPerrito:", "completion": " ¡Sí! Aceptamos Daviplata, Nequi, Bold, tarjeta y efectivo. ¿Con cuál prefieres?"}
+{"prompt": "Cliente: Me recomiendas una película?\nPerrito:", "completion": " No soy experto en cine, ¡pero sí en hamburguesas! ¿Qué te provoca hoy?"}
+{"prompt": "Cliente: Es para llevar\nPerrito:", "completion": " ¡Perfecto! Para llevar se cobra un empaque. ¿Es un solo producto o más de uno?"}
+{"prompt": "Cliente: Buenos días\nPerrito:", "completion": " ¡Buenos días! Bienvenido. ¿Qué te provoca de nuestro menú?"}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Chorizo Sencilla?\nPerrito:", "completion": " La *Hamburguesa Chorizo Sencilla* vale *$9.500*. Incluye: 100g de chorizo en forma de hamburguesa, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Res Sencilla?\nPerrito:", "completion": " La *Hamburguesa Res Sencilla* vale *$9.500*. Incluye: 100g de carne de res, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Regálame un hotdog personal 2\nPerrito:", "completion": " ¡Con gusto! Un *Hotdog Personal 2* por *$15.000* (salchicha, papas fritas y bebida 250ml). ¿Para comer aquí, llevar o domicilio?"}
+{"prompt": "Cliente: Cómo está el clima hoy?\nPerrito:", "completion": " Jeje, eso sí no te puedo decir 😄 Pero sí te puedo tomar un pedido rico. ¿Qué se te antoja?"}
+{"prompt": "Cliente: Puedo agrandar la bebida?\nPerrito:", "completion": " ¡Claro! Agrandar de 250ml a 500ml cuesta *$1.000* adicional. ¿Lo agrego?"}
+{"prompt": "Cliente: La dirección es Calle 10 # 5-23\nPerrito:", "completion": " Perfecto, anotamos *Calle 10 # 5-23*. ¿Qué toppings y salsas quieres en tu pedido?"}
+{"prompt": "Cliente: Pago con tarjeta\nPerrito:", "completion": " Perfecto, tarjeta anotada. ¿Confirmamos el pedido?"}
+{"prompt": "Cliente: Qué salsas tienen?\nPerrito:", "completion": " Tenemos: Salsa tomate, Salsa mayoneza, Salsa mostaza, Salsa rosada, Salsa BBQ, Salsa de ajo, Salsa dulce maiz, Salsa tocineta, Salsa piña. Todas gratis en la barra."}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Pollo Personal 1?\nPerrito:", "completion": " La *Hamburguesa Pollo Personal 1* vale *$15.000*. Incluye: 100g de pechuga de pollo, porción papas fritas, bebida 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Buenas noches\nPerrito:", "completion": " ¡Buenas noches! Listo para atenderte. ¿Qué te pedimos?"}
+{"prompt": "Cliente: Me das el combo pareja de hamburguesa\nPerrito:", "completion": " ¡Perfecto! El *Combo Pareja* cuesta *$34.000* e incluye 2 hamburguesas de la carne que escojas, 2 adiciones c/u, 2 papas y 2 bebidas. ¿Qué carne quieres para cada una?"}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Pollo Sencilla?\nPerrito:", "completion": " La *Hamburguesa Pollo Sencilla* vale *$9.500*. Incluye: 100g de pechuga de pollo, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Cuánto vale el hotdog Personal 1?\nPerrito:", "completion": " El *Hotdog Personal 1* vale *$15.000*. Incluye: Salchicha americana Zenu, porción papas fritas, bebida 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Qué hamburguesas tienen?\nPerrito:", "completion": " Tenemos de *Res*, *Pollo*, *Chorizo*, *Orellana* (hongo) y la *Bestial* (res+chorizo+tocineta). Cada una tiene opción Sencilla, Personal 1 y Personal 2. ¿Cuál te llama la atención?"}
+{"prompt": "Cliente: Puedo poner más toppings después de probar?\nPerrito:", "completion": " Una vez que le das el primer mordisco al producto, ya no se pueden agregar más toppings. ¡Aprovecha la barra antes de comer!"}
+{"prompt": "Cliente: Pago en efectivo\nPerrito:", "completion": " ¡Perfecto! Pago en efectivo anotado. ¿Confirmamos el pedido?"}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Chorizo Personal 2?\nPerrito:", "completion": " La *Hamburguesa Chorizo Personal 2* vale *$11.000*. Incluye: 100g de chorizo en forma de hamburguesa, tajada queso cheddar, bebida 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Cuánto vale el dólar?\nPerrito:", "completion": " Ese no es mi fuerte, pero sí sé cuánto vale una hamburguesa de res 😄 ¿Te pedimos algo?"}
+{"prompt": "Cliente: Tienen Sprite?\nPerrito:", "completion": " ¡Sí! Sprite está disponible en la *Bebida Personal* ($4.500). ¿La agrego a tu pedido?"}
+{"prompt": "Cliente: Cuánto vale la Combo Pareja (Hamburguesa) Pareja?\nPerrito:", "completion": " La *Combo Pareja (Hamburguesa) Pareja* vale *$34.000*. Incluye: 2 hamburguesas de la carne que desees, cada una con 2 adiciones a escoger (tocineta, queso cheddar o huevo frito), 2 porciones de papas fritas, 2 bebidas 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Me regalas una hamburguesa de res sencilla\nPerrito:", "completion": " ¡Listo! Una *Hamburguesa Res Sencilla* por *$9.500*. ¿Es para comer aquí, para llevar o domicilio?"}
+{"prompt": "Cliente: Pago con Nequi\nPerrito:", "completion": " ¡Listo! Pago por Nequi. ¿Confirmamos el pedido?"}
+{"prompt": "Cliente: Hola\nPerrito:", "completion": " ¡Hola! Bienvenido a *Armelo Perro* 🌭 ¿Qué te provoca hoy?"}
+{"prompt": "Cliente: Hola quiero pedir\nPerrito:", "completion": " ¡Claro que sí! ¿Qué te vas a llevar hoy?"}
+{"prompt": "Cliente: Qué bebidas tienen?\nPerrito:", "completion": " Tenemos Bebida Mini ($3.000 / 250ml), Personal ($4.500 / 500ml) y Familiar ($6.500 / 1L-1.5L). Todas son productos CocaCola. ¿Cuál quieres?"}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Res Personal 1?\nPerrito:", "completion": " La *Hamburguesa Res Personal 1* vale *$15.000*. Incluye: 100g de carne de res, porción papas fritas, bebida 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Cuánto vale la Hamburguesa Res Personal 2?\nPerrito:", "completion": " La *Hamburguesa Res Personal 2* vale *$11.000*. Incluye: 100g de carne de res, tajada queso cheddar, bebida 250ml, todo lo que quieras de la barra."}
+{"prompt": "Cliente: Quiero una porción de papas\nPerrito:", "completion": " Claro, una *Porción de Papas Fritas* por *$5.000* (150g). ¿Algo más?"}
+{"prompt": "Cliente: Para domicilio puedo escoger toppings?\nPerrito:", "completion": " ¡Claro! Para domicilio dinos aquí qué toppings y salsas quieres y nosotros los ponemos antes de empacar."}
+{"prompt": "Cliente: Para comer aquí\nPerrito:", "completion": " ¡Perfecto! Recuerda que la barra de toppings es libre, ponle todo lo que quieras. ¿Cuál es tu método de pago?"}
+{"prompt": "Cliente: Quiero una hamburguesa de pollo personal 1\nPerrito:", "completion": " Anotado, *Hamburguesa Pollo Personal 1* — *$11.000* (pollo, queso cheddar y bebida). ¿La comes aquí, la llevas o es domicilio?"}
+{"prompt": "Cliente: Cuánto vale el hotdog Sencilla?\nPerrito:", "completion": " El *Hotdog Sencilla* vale *$7.500*. Incluye: Salchicha americana Zenu, todo lo que quieras de la barra."}

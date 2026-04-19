@@ -1,0 +1,99 @@
+{
+  "restaurante": "Armelo Perro",
+  "descripcion": "Fast food colombiano especializado en hamburguesas y hotdogs con barra de toppings",
+  "horario": "Lunes a Jueves 1:00pm - 10:00pm | Viernes a Sabado 1:00pm - 11:00pm | Domingo 3:00pm - 9:00pm",
+  "metodos_pago": ["Efectivo", "Tarjeta débito/crédito", "Nequi", "Daviplata", "Tarjeta"],
+  "modalidades": ["En el restaurante", "Para llevar", "Domicilio"],
+  "barra_toppings": {
+    "descripcion": "¡Todos los toppings y salsas que quieras sin costo adicional!",
+    "toppings": ["Papas ripio","Queso saravena","Lechuga","Ensalada","Tomate","Cebolla","Pepinillos","Pico de gallo","Jalapeños"],
+    "salsas": ["Salsa tomate","Salsa mayoneza","Salsa mostaza","Salsa rosada","Salsa BBQ","Salsa de ajo","Salsa dulce maiz","Salsa tocineta","Salsa piña"]
+  },
+  "nota_barra": "Una vez el cliente pruebe el producto, no se pueden agregar más toppings. En domicilio, el cliente indica los toppings al hacer el pedido.",
+  "menu": {
+    "hamburguesas": [
+      {
+        "nombre": "Hamburguesa Res",
+        "opciones": [
+          {"combo": "Sencilla", "precio": 9500, "descripcion": "100g de carne de res, todo lo que quieras de la barra"},
+          {"combo": "Personal 2", "precio": 11000, "descripcion": "100g de carne de res, tajada queso cheddar, bebida 250ml, todo lo que quieras de la barra"},
+          {"combo": "Personal 1", "precio": 15000, "descripcion": "100g de carne de res, porción papas fritas, bebida 250ml, todo lo que quieras de la barra"}
+        ]
+      },
+      {
+        "nombre": "Hamburguesa Pollo",
+        "opciones": [
+          {"combo": "Sencilla", "precio": 9500, "descripcion": "100g de pechuga de pollo, todo lo que quieras de la barra"},
+          {"combo": "Personal 2", "precio": 11000, "descripcion": "100g de pechuga de pollo, tajada queso cheddar, bebida 250ml, todo lo que quieras de la barra"},
+          {"combo": "Personal 1", "precio": 15000, "descripcion": "100g de pechuga de pollo, porción papas fritas, bebida 250ml, todo lo que quieras de la barra"}
+        ]
+      },
+      {
+        "nombre": "Hamburguesa Chorizo",
+        "opciones": [
+          {"combo": "Sencilla", "precio": 9500, "descripcion": "100g de chorizo en forma de hamburguesa, todo lo que quieras de la barra"},
+          {"combo": "Personal 2", "precio": 11000, "descripcion": "100g de chorizo en forma de hamburguesa, tajada queso cheddar, bebida 250ml, todo lo que quieras de la barra"},
+          {"combo": "Personal 1", "precio": 15000, "descripcion": "100g de chorizo en forma de hamburguesa, porción papas fritas, bebida 250ml, todo lo que quieras de la barra"}
+        ]
+      },
+      {
+        "nombre": "Hamburguesa Orellana",
+        "opciones": [
+          {"combo": "Sencilla", "precio": null, "descripcion": "100g de orellana (hongo), todo lo que quieras de la barra. Precio consultar."}
+        ]
+      },
+      {
+        "nombre": "Hamburguesa Bestial",
+        "opciones": [
+          {"combo": "Sencilla", "precio": null, "descripcion": "Hamburguesa mixta: 100g carne de res, 100g chorizo, 3 tocinetas, 3 quesos cheddar, todo lo que quieras de la barra. Precio consultar."}
+        ]
+      },
+      {
+        "nombre": "Combo Pareja (Hamburguesa)",
+        "opciones": [
+          {"combo": "Pareja", "precio": 34000, "descripcion": "2 hamburguesas de la carne que desees, cada una con 2 adiciones a escoger (tocineta, queso cheddar o huevo frito), 2 porciones de papas fritas, 2 bebidas 250ml, todo lo que quieras de la barra"}
+        ]
+      },
+      {
+        "nombre": "Combo Parche (Hamburguesa)",
+        "opciones": [
+          {"combo": "Parche", "precio": 48000, "descripcion": "4 hamburguesas de la carne que desees, 4 tocinetas (una por hamburguesa), 2 porciones de papas fritas, 2 bebidas 250ml, todo lo que quieras de la barra"}
+        ]
+      }
+    ],
+    "hotdogs": [
+      {
+        "nombre": "Hotdog",
+        "opciones": [
+          {"combo": "Sencilla", "precio": 7500, "descripcion": "Salchicha americana Zenu, todo lo que quieras de la barra"},
+          {"combo": "Personal 2", "precio": 11000, "descripcion": "Salchicha americana Zenu, 2 huevos de codorniz, bebida 250ml, todo lo que quieras de la barra"},
+          {"combo": "Personal 1", "precio": 15000, "descripcion": "Salchicha americana Zenu, porción papas fritas, bebida 250ml, todo lo que quieras de la barra"},
+          {"combo": "Pareja", "precio": 30000, "descripcion": "2 hotdogs, cada uno con 1 adición a escoger (tocineta, queso cheddar o huevo de codorniz), 2 porciones de papas fritas, 2 bebidas 250ml, todo lo que quieras de la barra"},
+          {"combo": "Parche", "precio": 44000, "descripcion": "4 hotdogs, 4 huevos de codorniz (uno por hotdog), 2 porciones de papas fritas, 2 bebidas 250ml, todo lo que quieras de la barra"}
+        ]
+      }
+    ],
+    "porciones": [
+      {"nombre": "Papas Fritas", "combo": "Porción", "precio": 5000, "descripcion": "150g de papas fritas a la francesa"},
+      {"nombre": "Carne de Res", "combo": "Porción", "precio": 5000, "descripcion": "100g de carne de res"},
+      {"nombre": "Pollo", "combo": "Porción", "precio": 5000, "descripcion": "100g de pechuga de pollo"},
+      {"nombre": "Chorizo", "combo": "Porción", "precio": 5000, "descripcion": "100g de chorizo en forma de hamburguesa"}
+    ],
+    "adiciones": [
+      {"nombre": "Tocineta", "precio": 1500, "descripcion": "1 tajada de tocineta"},
+      {"nombre": "Queso Cheddar", "precio": 1500, "descripcion": "1 tajada de queso cheddar"},
+      {"nombre": "Huevo Frito", "precio": 1500, "descripcion": "1 huevo frito"},
+      {"nombre": "Huevo de Codorniz", "precio": 1500, "descripcion": "2 huevos de codorniz"},
+      {"nombre": "Agrandar Gaseosa", "precio": 1000, "descripcion": "Agranda tu bebida de 250ml a 500ml"}
+    ],
+    "bebidas": [
+      {"nombre": "Bebida Mini", "precio": 3000, "descripcion": "CocaCola, CocaCola Zero, Quatro, Kola Román, Agua Manzana, Agua Natural (250ml)"},
+      {"nombre": "Bebida Personal", "precio": 4500, "descripcion": "CocaCola, CocaCola Zero, Quatro, Kola Román, Sprite, Fuze Tea, Jugo del Valle, Agua Saborizada, Agua Natural (500ml)"},
+      {"nombre": "Bebida Familiar", "precio": 6500, "descripcion": "CocaCola 1L o Quatro 1.5L"}
+    ],
+    "domicilio": [
+      {"nombre": "Empaque Individual", "precio": 500, "descripcion": "Empaque para llevar un solo producto"},
+      {"nombre": "Empaque Familiar", "precio": 1000, "descripcion": "Empaque para llevar más de un producto"}
+    ]
+  } 
+}

@@ -1,0 +1,11 @@
+#  Producción
+groq>=0.9.0
+flask>=3.0.0
+twilio>=9.0.0
+python-dotenv>=1.0.0
+
+#  Fine-tuning (solo para entrenar el modelo)
+ transformers>=4.40.0
+ datasets>=2.19.0
+ accelerate>=0.30.0
+ torch>=2.2.0
