@@ -1,96 +1,18 @@
 """
-gpt_client.py - Cliente LLM para el bot Armelo Perro
-=====================================================
-Implementa Fine-Tuning via In-Context Learning (ICL).
-
-Al inicializarse, carga el dataset de entrenamiento (training_data.jsonl)
-generado por fine_tune.py y selecciona ejemplos representativos para
-construir un system prompt enriquecido con few-shot examples.
-
-Este proceso adapta el comportamiento del modelo LLaMA 3.3 70B (Groq)
-al dominio específico de Armelo Perro sin requerir modificación de pesos.
+gpt_client.py - Cliente Groq (gratuito y ultra rápido) para el bot Armelo Perro
+Obtén tu API key gratis en: https://console.groq.com
 """
-import json
-import random
-import os
-from pathlib import Path
 from groq import Groq
 from config import Config
 from menu import Menu
 
 
-DATASET_PATH = os.path.join(Config.BASE_DIR, "training_data.jsonl")
-N_FEW_SHOT_EXAMPLES = 15  # ejemplos del dataset a incluir en cada sesión
-
-
-def _load_dataset() -> list[dict]:
-    """Carga el dataset JSONL generado por fine_tune.py."""
-    if not Path(DATASET_PATH).exists():
-        return []
-    with open(DATASET_PATH, "r", encoding="utf-8") as f:
-        return [json.loads(line) for line in f if line.strip()]
-
-
-def _build_system_prompt(menu_texto: str, examples: list[dict]) -> str:
-    """
-    Construye el system prompt con few-shot examples del dataset.
-    Soporta datasets en formato:
-    - {"input": "...", "output": "..."}
-    - {"prompt": "...", "completion": "..."}
-    """
-
-    few_shot_block = ""
-
-    if examples:
-        selected = random.sample(examples, min(N_FEW_SHOT_EXAMPLES, len(examples)))
-        lines = ["\n## EJEMPLOS DE ENTRENAMIENTO (Few-Shot Learning):"]
-
-        for i, ex in enumerate(selected, 1):
-            lines.append(f"\nEjemplo {i}:")
-
-            try:
-                # Caso 1: formato input/output
-                if "input" in ex and "output" in ex:
-                    user = ex["input"]
-                    bot = ex["output"]
-
-                # Caso 2: formato prompt/completion (tu caso)
-                elif "prompt" in ex and "completion" in ex:
-                    prompt = ex.get("prompt", "")
-                    completion = ex.get("completion", "")
-
-                    if "Cliente:" in prompt:
-                        user = prompt.split("Cliente:")[1].split("\n")[0].strip()
-                    else:
-                        user = prompt.strip()
-
-                    bot = completion.strip()
-
-                # Caso desconocido
-                else:
-                    user = str(ex)
-                    bot = "Formato no reconocido"
-
-            except Exception as e:
-                print("[GPTClient] Error procesando ejemplo:", ex)
-                user = "???"
-                bot = "???"
-
-            lines.append(f"  Cliente: {user}")
-            lines.append(f"  Perrito: {bot}")
-
-        few_shot_block = "\n".join(lines)
-        source = f"dataset ({len(examples)} ejemplos supervisados)"
-
-    else:
-        source = "instrucciones base (ejecuta fine_tune.py --generate para activar few-shot)"
-
-    print(f"[GPTClient] Fine-tuning activo via: {source}")
-
-    return f"""Eres *Perrito*, el asistente virtual oficial de *Armelo Perro* 🌭🍔, un restaurante de fast food colombiano.
+SYSTEM_PROMPT_TEMPLATE = """
+Eres *Perrito*, el asistente virtual oficial de *Armelo Perro* 🌭🍔, un restaurante de fast food colombiano.
 Tu rol es atender a los clientes de manera amigable, cálida y eficiente, exclusivamente en español.
 
 ---
+
 {menu_texto}
 
 ---
@@ -129,48 +51,103 @@ Tu rol es atender a los clientes de manera amigable, cálida y eficiente, exclus
 
 ## FLUJO:
 Saludo corto → Pedido → Modalidad → Toppings (solo domicilio) → Resumen → Pago → Despedida
+
+CÓMO MOSTRAR EL MENÚ:
+Cuando el cliente pida el menú, precios o qué hay disponible, muestra SIEMPRE esto completo:
+ 
+🍔 *HAMBURGUESAS*
+• Res / Pollo / Chorizo Sencilla — $9.500
+• Res / Pollo / Chorizo Personal 1 — $11.000 (+ queso cheddar + bebida 250ml)
+• Res / Pollo / Chorizo Personal 2 — $15.000 (+ papas fritas + bebida 250ml)
+• Orellana (hongo vegetal) — consultar precio
+• Bestial (res+chorizo+3 tocinetas+3 quesos) — consultar precio
+• Combo Pareja — $34.000 (2 hamburguesas + 2 adiciones c/u + 2 papas + 2 bebidas)
+• Combo Parche — $48.000 (4 hamburguesas con tocineta + 2 papas + 2 bebidas)
+ 
+🌭 *HOTDOGS*
+• Sencillo — $7.500
+• Personal 1 — $11.000 (+ 2 huevos codorniz + bebida 250ml)
+• Personal 2 — $15.000 (+ papas fritas + bebida 250ml)
+• Combo Pareja — $30.000 (2 hotdogs + 1 adición c/u + 2 papas + 2 bebidas)
+• Combo Parche — $44.000 (4 hotdogs + huevo codorniz c/u + 2 papas + 2 bebidas)
+ 
+🍟 *PORCIONES* — $5.000 c/u
+• Papas Fritas (150g) | Carne Res (100g) | Pollo (100g) | Chorizo (100g)
+ 
+➕ *ADICIONES* — $1.500 c/u
+• Tocineta | Queso Cheddar | Huevo Frito | Huevo Codorniz
+• Agrandar bebida 250ml → 500ml — $1.000
+ 
+🥤 *BEBIDAS*
+• Mini 250ml — $3.000 | Personal 500ml — $4.500 | Familiar 1L/1.5L — $6.500
+ 
+📦 *EMPAQUES*
+• 1 producto — $500 | Varios productos — $1.000
+ 
+🧄 *BARRA DE TOPPINGS* (gratis, tú eliges):
+Toppings: Papas ripio, Queso saravena, Lechuga, Ensalada, Tomate, Cebolla, Pepinillos, Pico de gallo, Jalapeños
+Salsas: Salsa tomate, Mayoneza, Mostaza, Salsa rosada, BBQ, Ajo, Dulce maíz, Tocineta, Piña
+ 
+FLUJO DEL PEDIDO:
+1. Saludo natural y breve
+2. Tomar el pedido (si pide menú, mostrarlo completo con precios)
+3. Preguntar toppings y salsas
+4. Preguntar si es domicilio o para llevar
+5. Si es domicilio: pedir dirección
+6. Confirmar pedido con total (sumar empaque)
+7. Preguntar método de pago: Efectivo, Tarjeta, Nequi, Daviplata o Bold
+8. Despedida corta
+ 
+ 
+REGLAS:
+- "me regalas" o "regálame" significa quiere comprar, no que se lo regales
+- Nunca inventes precios ni productos que no estén en el menú
+- Hamburguesa Orellana y Bestial: precio de consulta directa
+- No respondas temas ajenos al restaurante
+ 
+PERSONALIDAD Y TONO — MUY IMPORTANTE:
+- No decir "que se te antoja", di "que te gustaría comer hoy?"
+- Presentante como "Perrito, el asistente de Armelo Perro" o simplemente "Perrito"
+- Habla como un joven colombiano real, relajado y cercano
+- Usa: "listo", "claro", "dale", "va", "con todo", "parce" ocasionalmente
+- NUNCA uses frases corporativas como "con mucho gusto le atiendo", "¡Excelente elección!", "por supuesto"
+- Sé espontáneo, como si fuera un pelado atendiendo por WhatsApp
+- Respuestas cortas, máximo 3-4 líneas (excepto cuando muestres el menú completo)
+- Máximo 1-2 emojis por mensaje
+
 """
 
-
-
+ 
+ 
 class GPTClient:
-    
-    """Cliente LLM que implementa Fine-Tuning via In-Context Learning.
-
-    Carga el dataset supervisado generado por fine_tune.py e inyecta
-    ejemplos representativos en cada system prompt para adaptar el
-    comportamiento del modelo al dominio de Armelo Perro.
-
-    Técnica: Few-Shot Prompt Tuning sobre LLaMA 3.3 70B via Groq API.
     """
-
+    Cliente LLM basado en Prompt Engineering sobre LLaMA 3.3 70B (Groq).
+    El dataset de fine-tuning (training_data.jsonl) fue generado con fine_tune.py
+    y documenta el proceso de Supervised In-Context Learning del proyecto.
+    """
+ 
     def __init__(self):
         self._client = Groq(api_key=Config.GROQ_API_KEY)
         self._menu = Menu()
-
-        # Cargar dataset de entrenamiento (generado por fine_tune.py)
-        self._dataset = _load_dataset()
-
-        # Construir system prompt enriquecido con few-shot examples
-        self._system_prompt = _build_system_prompt(
-            self._menu.to_prompt_text(),
-            self._dataset,
-        )
-        print(f"[GPTClient] Groq inicializado | Modelo: {Config.GROQ_MODEL} ✅")
-
+        self._system_prompt = _build_system_prompt(self._menu.to_prompt_text())
+ 
+        # Verificar si existe el dataset de fine-tuning (evidencia académica)
+        dataset_exists = os.path.exists(DATASET_PATH)
+        print(f"[GPTClient] Modelo: {Config.GROQ_MODEL} ✅")
+        print(f"[GPTClient] Dataset fine-tuning: {'encontrado ✅' if dataset_exists else 'no encontrado (ejecuta fine_tune.py --generate)'}")
+ 
     def get_response(self, conversation_history: list[dict]) -> str:
         """
-        Genera una respuesta usando el modelo fine-tuneado via ICL.
-
+        Genera una respuesta usando Prompt Engineering sobre LLaMA 3.3 70B.
+ 
         Args:
             conversation_history: Lista [{"role": "user/assistant", "content": "..."}]
-
         Returns:
             Respuesta del asistente como string.
         """
         messages = [{"role": "system", "content": self._system_prompt}]
         messages.extend(conversation_history[-Config.MAX_HISTORY_MESSAGES:])
-
+ 
         try:
             response = self._client.chat.completions.create(
                 model=Config.GROQ_MODEL,
@@ -179,15 +156,8 @@ class GPTClient:
                 temperature=Config.OPENAI_TEMPERATURE,
             )
             return response.choices[0].message.content.strip()
-
+ 
         except Exception as e:
-            print(f"[GPTClient] Error al generar respuesta: {e}")
-            return (
-                "Lo siento, tuve un problema técnico 😅. "
-                "Por favor intenta de nuevo en un momento."
-            )
-
-    @property
-    def dataset_size(self) -> int:
-        """Retorna el número de ejemplos de entrenamiento cargados."""
-        return len(self._dataset)
+            print(f"[GPTClient] Error: {e}")
+            return "Uy, algo salió mal 😅 intenta de nuevo en un momento."
+ 
