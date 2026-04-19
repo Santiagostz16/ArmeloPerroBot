@@ -1,18 +1,6 @@
 """
-fine_tune.py - Generación de dataset y fine-tuning del modelo para Armelo Perro
-===============================================================================
-Este script realiza DOS cosas:
-  1. Genera un dataset de conversaciones (JSONL) basado en el menú real
-  2. Fine-tunea un modelo LLM pequeño (TinyLlama / DialoGPT) usando ese dataset
-
-Ejecutar:
-    python fine_tune.py --generate   # Solo genera el dataset
-    python fine_tune.py --train      # Genera dataset y entrena el modelo
-    python fine_tune.py --both       # Ambos pasos (recomendado primera vez)
-
-El modelo entrenado se guarda en ./finetuned_model/ 
+fine_tune.py - Dataset supervisado para Armelo Perro Bot (In-Context Learning)
 """
-
 import json
 import os
 import argparse
@@ -20,408 +8,277 @@ import random
 from pathlib import Path
 from config import Config
 from menu import Menu
-
-
-# Rutas
+ 
 DATASET_PATH = os.path.join(Config.BASE_DIR, "training_data.jsonl")
-MODEL_OUTPUT_PATH = os.path.join(Config.BASE_DIR, "finetuned_model")
-BASE_MODEL = "microsoft/DialoGPT-small" 
-
-# GENERADOR DE DATASET
+PROMPT_EXPORT_PATH = os.path.join(Config.BASE_DIR, "system_prompt_finetuned.txt")
+ 
+ 
 class DatasetGenerator:
-    
-    #Genera un dataset de conversaciones de cliente-bot para Armelo Perro.
-    #Cada ejemplo sigue el formato de fine-tuning: prompt → completion.
+    """
+    Genera dataset supervisado de conversaciones naturales colombianas
+    para Armelo Perro. Todos los pedidos son para llevar o domicilio.
+    """
+ 
     def __init__(self):
         self._menu = Menu()
         self._data = self._menu._data
-        self._examples: list[dict] = []
-
-    # ── Helpers ──────────────────────────────────────────────────────────────
-
-    def _example(self, user: str, bot: str) -> dict:
-        #Crea un ejemplo de entrenamiento en formato prompt/completion.
-        return {
-            "prompt": f"Cliente: {user}\nPerrito:",
-            "completion": f" {bot.strip()}"
-        }
-
-    def _price(self, p: int | None) -> str:
-        if p is None:
-            return "consultar precio"
-        return f"${p:,.0f}".replace(",", ".")
-
-    # Categorías 
-    def _gen_saludos(self) -> list[dict]:
-        saludos = [
-            ("Hola", "¡Hola! Bienvenido a *Armelo Perro* 🌭 ¿Qué te provoca hoy?"),
-            ("Buenas tardes", "¡Buenas tardes! Bienvenido a *Armelo Perro*. ¿Qué te pedimos?"),
-            ("Hola buenas", "¡Hola! Con mucho gusto. ¿Qué vas a querer hoy?"),
-            ("Buenos días", "¡Buenos días! Bienvenido. ¿Qué te provoca de nuestro menú?"),
-            ("Buenas noches", "¡Buenas noches! Listo para atenderte. ¿Qué te pedimos?"),
-            ("Hola quiero pedir", "¡Claro que sí! ¿Qué te vas a llevar hoy?"),
-            ("Me ayudas con un pedido?", "¡Con mucho gusto! ¿Qué te provoca?"),
-        ]
-        return [self._example(u, b) for u, b in saludos]
-
-    def _gen_preguntas_menu(self) -> list[dict]:
-        examples = []
-        menu = self._data["menu"]
-
-        # Preguntas generales del menú
-        examples.append(self._example(
-            "Qué tienen en el menú?",
-            "Tenemos hamburguesas (res, pollo, chorizo, orellana, bestial), hotdogs y porciones. "
-            "También bebidas y adiciones. ¿Qué se te antoja?"
-        ))
-        examples.append(self._example(
-            "Qué hamburguesas tienen?",
-            "Tenemos de *Res*, *Pollo*, *Chorizo*, *Orellana* (hongo) y la *Bestial* (res+chorizo+tocineta). "
-            "Cada una tiene opción Sencilla, Personal 1 y Personal 2. ¿Cuál te llama la atención?"
-        ))
-        examples.append(self._example(
-            "Tienen hotdog?",
-            "¡Sí! Hotdog con salchicha americana Zenú. Desde $7.500 el sencillo. "
-            "También tenemos combos Pareja y Parche. ¿Te interesa?"
-        ))
-        examples.append(self._example(
-            "Cuánto vale la hamburguesa?",
-            "La hamburguesa sencilla vale *$9.500*, el Personal 1 *$11.000* y el Personal 2 *$15.000*. ¿Cuál prefieres?"
-        ))
-
-        # Preguntas sobre combos específicos
-        for h in menu["hamburguesas"]:
-            for op in h["opciones"]:
-                precio = self._price(op.get("precio"))
-                examples.append(self._example(
-                    f"Cuánto vale la {h['nombre']} {op['combo']}?",
-                    f"La *{h['nombre']} {op['combo']}* vale *{precio}*. Incluye: {op['descripcion']}."
-                ))
-
-        for op in menu["hotdogs"][0]["opciones"]:
-            precio = self._price(op.get("precio"))
-            examples.append(self._example(
-                f"Cuánto vale el hotdog {op['combo']}?",
-                f"El *Hotdog {op['combo']}* vale *{precio}*. Incluye: {op['descripcion']}."
-            ))
-
-        return examples
-
-    def _gen_toppings(self) -> list[dict]:
-        toppings = self._data["barra_toppings"]["toppings"]
-        salsas = self._data["barra_toppings"]["salsas"]
-        examples = [
-            self._example(
-                "Qué toppings tienen?",
-                f"En la barra tienes: {', '.join(toppings)}. ¡Todo gratis y sin límite! 🎉"
-            ),
-            self._example(
-                "Qué salsas tienen?",
-                f"Tenemos: {', '.join(salsas)}. Todas gratis en la barra."
-            ),
-            self._example(
-                "La barra es gratis?",
-                "¡Sí! La barra de toppings y salsas es completamente gratis. Pon todo lo que quieras 🙌"
-            ),
-            self._example(
-                "Puedo poner más toppings después de probar?",
-                "Una vez que le das el primer mordisco al producto, ya no se pueden agregar más toppings. "
-                "¡Aprovecha la barra antes de comer!"
-            ),
-            self._example(
-                "Para domicilio puedo escoger toppings?",
-                "¡Claro! Para domicilio dinos aquí qué toppings y salsas quieres y nosotros los ponemos antes de empacar."
-            ),
-        ]
-        return examples
-
-    def _gen_pedidos(self) -> list[dict]:
-        """Genera ejemplos de flujo completo de pedido."""
-        examples = [
-            # Expresión colombiana "me regalas"
-            self._example(
-                "Me regalas una hamburguesa de res sencilla",
-                "¡Listo! Una *Hamburguesa Res Sencilla* por *$9.500*. ¿Es para comer aquí, para llevar o domicilio?"
-            ),
-            self._example(
-                "Regálame un hotdog personal 2",
-                "¡Con gusto! Un *Hotdog Personal 2* por *$15.000* (salchicha, papas fritas y bebida 250ml). "
-                "¿Para comer aquí, llevar o domicilio?"
-            ),
-            self._example(
-                "Quiero una hamburguesa de pollo personal 1",
-                "Anotado, *Hamburguesa Pollo Personal 1* — *$11.000* (pollo, queso cheddar y bebida). "
-                "¿La comes aquí, la llevas o es domicilio?"
-            ),
-            self._example(
-                "Me das el combo pareja de hamburguesa",
-                "¡Perfecto! El *Combo Pareja* cuesta *$34.000* e incluye 2 hamburguesas de la carne que escojas, "
-                "2 adiciones c/u, 2 papas y 2 bebidas. ¿Qué carne quieres para cada una?"
-            ),
-            self._example(
-                "Quiero el combo parche de hotdog",
-                "¡Buena elección! El *Combo Parche Hotdog* vale *$44.000* — 4 hotdogs con huevo de codorniz, "
-                "2 papas fritas y 2 bebidas. ¿Es para comer aquí o llevan?"
-            ),
-            self._example(
-                "Quiero una porción de papas",
-                "Claro, una *Porción de Papas Fritas* por *$5.000* (150g). ¿Algo más?"
-            ),
-            self._example(
-                "Me agrego una tocineta",
-                "¡Listo! Una *Tocineta* por *$1.500* agregada. ¿Algo más o cerramos el pedido?"
-            ),
-        ]
-        return examples
-
-    def _gen_modalidades(self) -> list[dict]:
+ 
+    def _ex(self, user: str, bot: str) -> dict:
+        return {"input": user.strip(), "output": bot.strip()}
+ 
+    def _saludos(self) -> list[dict]:
         return [
-            self._example(
-                "Es para llevar",
-                "¡Perfecto! Para llevar se cobra un empaque. ¿Es un solo producto o más de uno?"
-            ),
-            self._example(
-                "Para llevar un producto",
-                "Listo, empaque individual *$500*. ¿Cuál es tu método de pago? (Efectivo, Tarjeta, Nequi, Daviplata o Bold)"
-            ),
-            self._example(
-                "Es domicilio",
-                "¡Con gusto! ¿Cuál es la dirección de entrega?"
-            ),
-            self._example(
-                "La dirección es Calle 10 # 5-23",
-                "Perfecto, anotamos *Calle 10 # 5-23*. ¿Qué toppings y salsas quieres en tu pedido?"
-            ),
-            self._example(
-                "Para comer aquí",
-                "¡Perfecto! Recuerda que la barra de toppings es libre, ponle todo lo que quieras. "
-                "¿Cuál es tu método de pago?"
-            ),
+            self._ex("Hola", "¡Hola! Bienvenido a Armelo Perro 🌭 ¿qué te pedimos?"),
+            self._ex("Buenas tardes", "¡Buenas! ¿qué te vas a llevar hoy?"),
+            self._ex("Buenos días", "¡Buenos días! ¿qué se te antoja?"),
+            self._ex("Buenas noches", "¡Buenas noches! ¿qué te pedimos?"),
+            self._ex("Hola buenas", "¡Hola! ¿qué quieres pedir?"),
+            self._ex("Hola quiero pedir", "Dale, ¿qué se te antoja?"),
+            self._ex("Están abiertos?", f"¡Sí! Estamos {self._data['horario']}. ¿Qué te pedimos?"),
+            self._ex("Hola me pueden atender?", "¡Claro! Aquí estamos, ¿qué quieres?"),
         ]
-
-    def _gen_pagos(self) -> list[dict]:
-        metodos = self._data["metodos_pago"]
+ 
+    def _menu_completo(self) -> list[dict]:
         return [
-            self._example(
-                "Cómo puedo pagar?",
-                f"Aceptamos: {', '.join(metodos)}. ¿Con cuál vas?"
-            ),
-            self._example(
-                "Pago en efectivo",
-                "¡Perfecto! Pago en efectivo anotado. ¿Confirmamos el pedido?"
-            ),
-            self._example(
-                "Pago con Nequi",
-                "¡Listo! Pago por Nequi. ¿Confirmamos el pedido?"
-            ),
-            self._example(
-                "Pago con tarjeta",
-                "Perfecto, tarjeta anotada. ¿Confirmamos el pedido?"
-            ),
-            self._example(
-                "Tienen Daviplata?",
-                "¡Sí! Aceptamos Daviplata, Nequi, Bold, tarjeta y efectivo. ¿Con cuál prefieres?"
-            ),
+            self._ex("Me muestra el menú?",
+                "¡Va! Acá está:\n\n🍔 *HAMBURGUESAS*\n• Res/Pollo/Chorizo Sencilla — $9.500\n• Personal 1 — $11.000 (+ queso + bebida)\n• Personal 2 — $15.000 (+ papas + bebida)\n• Combo Pareja — $34.000 | Combo Parche — $48.000\n\n🌭 *HOTDOGS*\n• Sencillo — $7.500 | Personal 1 — $11.000 | Personal 2 — $15.000\n• Combo Pareja — $30.000 | Combo Parche — $44.000\n\n🍟 *PORCIONES* — $5.000 c/u\n➕ *ADICIONES* — $1.500 c/u\n🥤 *BEBIDAS* — desde $3.000\n\n¿Qué te llevas?"),
+            self._ex("Qué tienen?",
+                "Tenemos hamburguesas (res, pollo, chorizo, orellana, bestial), hotdogs, porciones y bebidas. ¿Quieres el menú completo o ya sabes qué quieres?"),
+            self._ex("Qué hay de comer?",
+                "¡Buenas opciones! Hamburguesas desde $9.500, hotdogs desde $7.500 y porciones a $5.000. ¿Te mando el menú completo?"),
+            self._ex("Cuánto valen las hamburguesas?",
+                "Las hamburguesas van así:\n• Sencilla — $9.500\n• Personal 1 — $11.000 (+ queso cheddar + bebida)\n• Personal 2 — $15.000 (+ papas + bebida)\n• Combo Pareja — $34.000 | Combo Parche — $48.000\n\n¿Cuál te llevas?"),
+            self._ex("Tienen precios?",
+                "¡Claro! ¿Quieres ver el menú completo con todo?"),
+            self._ex("Mándame el menú",
+                "¡Va!\n\n🍔 *HAMBURGUESAS*\n• Res/Pollo/Chorizo Sencilla — $9.500\n• Personal 1 — $11.000 (+ queso + bebida)\n• Personal 2 — $15.000 (+ papas + bebida)\n• Orellana/Bestial — consultar precio\n• Combo Pareja — $34.000 | Combo Parche — $48.000\n\n🌭 *HOTDOGS*\n• Sencillo — $7.500 | Personal 1 — $11.000 | Personal 2 — $15.000\n• Combo Pareja — $30.000 | Combo Parche — $44.000\n\n🍟 *PORCIONES* — $5.000\n➕ *ADICIONES* — $1.500\n🥤 *BEBIDAS* — $3.000 / $4.500 / $6.500\n📦 Empaque — $500 (1 producto) / $1.000 (varios)"),
         ]
-
-    def _gen_adiciones_bebidas(self) -> list[dict]:
+ 
+    def _pedidos(self) -> list[dict]:
         return [
-            self._example(
-                "Puedo agrandar la bebida?",
-                "¡Claro! Agrandar de 250ml a 500ml cuesta *$1.000* adicional. ¿Lo agrego?"
-            ),
-            self._example(
-                "Qué bebidas tienen?",
-                "Tenemos Bebida Mini ($3.000 / 250ml), Personal ($4.500 / 500ml) y Familiar ($6.500 / 1L-1.5L). "
-                "Todas son productos CocaCola. ¿Cuál quieres?"
-            ),
-            self._example(
-                "Tienen Sprite?",
-                "¡Sí! Sprite está disponible en la *Bebida Personal* ($4.500). ¿La agrego a tu pedido?"
-            ),
-            self._example(
-                "Quiero agregar un huevo frito",
-                "¡Listo! Un *Huevo Frito* por *$1.500*. ¿Algo más?"
-            ),
+            self._ex("Me regalas una hamburguesa de res sencilla",
+                "¡Va! Hamburguesa Res Sencilla — $9.500 🍔 ¿Con qué toppings y salsas la quieres?"),
+            self._ex("Quiero una hamburguesa de pollo personal 2",
+                "Dale, Hamburguesa Pollo Personal 2 — $15.000 (papas + bebida incluidas). ¿Qué toppings y salsas le ponemos?"),
+            self._ex("Regálame un hotdog sencillo",
+                "¡Listo! Hotdog Sencillo — $7.500 🌭 ¿Qué toppings y salsas quieres?"),
+            self._ex("Quiero el combo pareja de hamburguesa",
+                "¡Buena! Combo Pareja — $34.000 (2 hamburguesas + 2 adiciones c/u + 2 papas + 2 bebidas). ¿De qué carne las quieres?"),
+            self._ex("Me das el combo parche de hotdog",
+                "¡Va! Combo Parche Hotdog — $44.000 (4 hotdogs + huevo codorniz c/u + 2 papas + 2 bebidas). ¿Es domicilio o para llevar?"),
+            self._ex("Una hamburguesa de chorizo personal 1",
+                "Anotado, Hamburguesa Chorizo Personal 1 — $11.000 (queso cheddar + bebida). ¿Toppings y salsas?"),
+            self._ex("Quiero una porción de papas",
+                "¡Dale! Porción de Papas — $5.000. ¿Algo más?"),
+            self._ex("Agrego una tocineta",
+                "Listo, tocineta — $1.500. ¿Algo más?"),
+            self._ex("Me pone queso cheddar extra",
+                "¡Va! Queso Cheddar — $1.500. ¿Algo más?"),
+            self._ex("Quiero agrandar la bebida",
+                "Claro, la agrandamos de 250ml a 500ml por $1.000 más. ¿Algo más?"),
+            self._ex("Dos hamburguesas de res personal 2",
+                "¡Dale! 2 x Hamburguesa Res Personal 2 — $30.000. ¿Toppings y salsas para cada una?"),
+            self._ex("Tienen hamburguesa vegetariana?",
+                "¡Sí! La Hamburguesa Orellana es de hongo, perfecta para vegetarianos. El precio es de consulta. ¿Te la anoto?"),
         ]
-
-    def _gen_fuera_contexto(self) -> list[dict]:
-        """Ejemplos de rechazo educado a preguntas fuera del restaurante."""
+ 
+    def _toppings(self) -> list[dict]:
         return [
-            self._example(
-                "Cómo está el clima hoy?",
-                "Jeje, eso sí no te puedo decir 😄 Pero sí te puedo tomar un pedido rico. ¿Qué se te antoja?"
-            ),
-            self._example(
-                "Cuánto vale el dólar?",
-                "Ese no es mi fuerte, pero sí sé cuánto vale una hamburguesa de res 😄 ¿Te pedimos algo?"
-            ),
-            self._example(
-                "Me recomiendas una película?",
-                "No soy experto en cine, ¡pero sí en hamburguesas! ¿Qué te provoca hoy?"
-            ),
+            self._ex("Con todo",
+                "¡Va, con todo! ¿Es domicilio o para llevar?"),
+            self._ex("Lechuga, tomate y salsa rosada",
+                "Anotado: lechuga, tomate y salsa rosada. ¿Es domicilio o para llevar?"),
+            self._ex("Sin cebolla",
+                "Sin cebolla, anotado. ¿Qué salsas quieres?"),
+            self._ex("Solo mayoneza y kétchup",
+                "Mayoneza y kétchup. ¿Es domicilio o para llevar?"),
+            self._ex("Qué toppings tienen?",
+                "Toppings: papas ripio, queso saravena, lechuga, ensalada, tomate, cebolla, pepinillos, pico de gallo, jalapeños.\nSalsas: tomate, mayoneza, mostaza, rosada, BBQ, ajo, dulce maíz, tocineta, piña.\n¡Todo gratis! ¿Cuáles quieres?"),
+            self._ex("Con jalapeños y salsa BBQ",
+                "Jalapeños y salsa BBQ, anotado. ¿Domicilio o para llevar?"),
+            self._ex("Sin nada",
+                "Sin toppings, va. ¿Domicilio o para llevar?"),
         ]
-
-    # ── Generador principal ───────────────────────────────────────────────────
-
+ 
+    def _domicilio_llevar(self) -> list[dict]:
+        return [
+            self._ex("Es para llevar",
+                "¡Listo! Se cobra empaque: $500 si es 1 producto o $1.000 si son varios. ¿Cuántos productos llevas?"),
+            self._ex("Para llevar",
+                "¡Va! ¿Cómo vas a pagar? (Efectivo, Tarjeta, Nequi, Daviplata o Bold)"),
+            self._ex("Domicilio",
+                "¡Dale! ¿A qué dirección te lo llevamos?"),
+            self._ex("Es domicilio",
+                "¡Va! ¿Cuál es la dirección?"),
+            self._ex("La dirección es Calle 10 # 5-23",
+                "Anotamos Calle 10 # 5-23. ¿Cómo vas a pagar?"),
+            self._ex("Carrera 15 con calle 80",
+                "Listo, Carrera 15 con Calle 80. ¿Cómo pagas?"),
+            self._ex("Cuánto cuesta el domicilio?",
+                "El domicilio no tiene costo de envío, solo se cobra el empaque: $500 (1 producto) o $1.000 (varios)."),
+        ]
+ 
+    def _pagos(self) -> list[dict]:
+        return [
+            self._ex("Pago en efectivo",
+                "¡Perfecto! Efectivo anotado. ¿Confirmamos el pedido?"),
+            self._ex("Con Nequi",
+                "¡Va! Nequi anotado. ¿Confirmamos?"),
+            self._ex("Con tarjeta",
+                "Listo, tarjeta. ¿Confirmamos?"),
+            self._ex("Daviplata",
+                "¡Dale! Daviplata. ¿Confirmamos el pedido?"),
+            self._ex("Pago con Bold",
+                "¡Va! Bold anotado. ¿Confirmamos?"),
+            self._ex("Cómo puedo pagar?",
+                "Aceptamos efectivo, tarjeta débito/crédito, Nequi, Daviplata y Bold. ¿Con cuál?"),
+        ]
+ 
+    def _confirmacion(self) -> list[dict]:
+        return [
+            self._ex("Sí, confirmo",
+                "¡Listo! Pedido en camino 🙌 ¡Gracias por pedir con Armelo Perro!"),
+            self._ex("Eso es todo",
+                "¡Perfecto! ¿Cómo vas a pagar?"),
+            self._ex("Listo eso es todo",
+                "¡Va! ¿Efectivo, tarjeta, Nequi, Daviplata o Bold?"),
+            self._ex("Gracias",
+                "¡A ti! Que lo disfrutes 😊"),
+            self._ex("Hasta luego",
+                "¡Hasta luego! Vuelve pronto 🌭"),
+            self._ex("Cuánto es el total?",
+                "Te confirmo el total con el empaque incluido. ¿Es 1 producto o varios?"),
+        ]
+ 
+    def _fuera_contexto(self) -> list[dict]:
+        return [
+            self._ex("Cómo está el clima?",
+                "Jaja eso sí no sé, pero tengo una hamburguesa que te va a alegrar el día 😄 ¿Qué se te antoja?"),
+            self._ex("Cuánto vale el dólar?",
+                "Ese no es mi fuerte, pero sí sé cuánto vale una hamburguesa de res 😄 ¿Te pedimos algo?"),
+            self._ex("Quién eres?",
+                "Soy Perrito, el bot de Armelo Perro 🐶 Estoy para tomarte el pedido. ¿Qué quieres?"),
+            self._ex("Me recomiendas algo?",
+                "La Hamburguesa Res Personal 2 es la más pedida — $15.000 con papas y bebida incluidas. ¿Te la anoto?"),
+        ]
+ 
     def generate(self) -> list[dict]:
-        """Genera todos los ejemplos del dataset."""
-        self._examples = []
-        self._examples.extend(self._gen_saludos())
-        self._examples.extend(self._gen_preguntas_menu())
-        self._examples.extend(self._gen_toppings())
-        self._examples.extend(self._gen_pedidos())
-        self._examples.extend(self._gen_modalidades())
-        self._examples.extend(self._gen_pagos())
-        self._examples.extend(self._gen_adiciones_bebidas())
-        self._examples.extend(self._gen_fuera_contexto())
-        random.shuffle(self._examples)
-        return self._examples
-
+        all_examples = []
+        all_examples.extend(self._saludos())
+        all_examples.extend(self._menu_completo())
+        all_examples.extend(self._pedidos())
+        all_examples.extend(self._toppings())
+        all_examples.extend(self._domicilio_llevar())
+        all_examples.extend(self._pagos())
+        all_examples.extend(self._confirmacion())
+        all_examples.extend(self._fuera_contexto())
+        random.seed(42)
+        random.shuffle(all_examples)
+        return all_examples
+ 
     def save(self, path: str = DATASET_PATH) -> int:
-        """Guarda el dataset en formato JSONL."""
         examples = self.generate()
         with open(path, "w", encoding="utf-8") as f:
             for ex in examples:
                 f.write(json.dumps(ex, ensure_ascii=False) + "\n")
-        print(f"[DatasetGenerator] ✅ Dataset guardado: {path} ({len(examples)} ejemplos)")
+        print(f"[DatasetGenerator] ✅ {len(examples)} ejemplos guardados en {path}")
         return len(examples)
-
-# FINE-TUNING CON HUGGING FACE TRANSFORMERS
-class FineTuner:
-    """
-    Fine-tunea un modelo de lenguaje usando el dataset generado.
-    Usa DialoGPT-small (~117MB) que puede entrenarse en CPU.
-    El modelo resultante queda guardado en ./finetuned_model/
-    """
-
-    def __init__(self, dataset_path: str = DATASET_PATH, output_dir: str = MODEL_OUTPUT_PATH):
+ 
+    def stats(self, examples: list[dict]) -> None:
+        cats = {
+            "Saludos": len(self._saludos()),
+            "Menú completo": len(self._menu_completo()),
+            "Pedidos": len(self._pedidos()),
+            "Toppings": len(self._toppings()),
+            "Domicilio/Llevar": len(self._domicilio_llevar()),
+            "Pagos": len(self._pagos()),
+            "Confirmación": len(self._confirmacion()),
+            "Fuera de contexto": len(self._fuera_contexto()),
+        }
+        print("\n📊 Dataset stats:")
+        for cat, n in cats.items():
+            print(f"  {cat:<25} {n:>4} ejemplos")
+        print(f"  {'TOTAL':<25} {len(examples):>4}")
+ 
+ 
+class InContextFineTuner:
+    def __init__(self, dataset_path: str = DATASET_PATH):
         self._dataset_path = dataset_path
-        self._output_dir = output_dir
-
-    def _load_dependencies(self):
-        #Importa las librerías de Hugging Face.
-        try:
-            from transformers import (
-                AutoTokenizer,
-                AutoModelForCausalLM,
-                TrainingArguments,
-                Trainer,
-                DataCollatorForLanguageModeling,
-            )
-            from datasets import Dataset
-            return AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForLanguageModeling, Dataset
-        except ImportError:
-            raise ImportError(
-                "Faltan dependencias de entrenamiento. Instala con:\n"
-                "pip install transformers datasets accelerate torch"
-            )
-
-    def _load_dataset_hf(self, tokenizer, Dataset):
-        #Carga y tokeniza el dataset JSONL.
-        raw = []
+        self._examples: list[dict] = []
+        self._load()
+ 
+    def _load(self) -> None:
+        if not Path(self._dataset_path).exists():
+            raise FileNotFoundError(f"Dataset no encontrado: {self._dataset_path}")
         with open(self._dataset_path, "r", encoding="utf-8") as f:
-            for line in f:
-                item = json.loads(line.strip())
-                # Concatenamos prompt + completion como texto de entrenamiento
-                text = item["prompt"] + item["completion"] + tokenizer.eos_token
-                raw.append({"text": text})
-
-        dataset = Dataset.from_list(raw)
-
-        def tokenize(batch):
-            return tokenizer(
-                batch["text"],
-                truncation=True,
-                max_length=256,
-                padding="max_length",
+            self._examples = [json.loads(line) for line in f if line.strip()]
+ 
+    def test_model(self, questions: list[str] = None) -> None:
+        from groq import Groq
+        from menu import Menu
+        import sys
+        sys.path.insert(0, Config.BASE_DIR)
+        from gpt_client import _build_system_prompt
+ 
+        if not Config.GROQ_API_KEY:
+            print("❌ GROQ_API_KEY no configurada en .env")
+            return
+ 
+        client = Groq(api_key=Config.GROQ_API_KEY)
+        menu = Menu()
+        system_prompt = _build_system_prompt(menu.to_prompt_text(), self._examples)
+ 
+        if questions is None:
+            questions = [
+                "Hola buenas",
+                "Me muestras el menú?",
+                "Me regalas una hamburguesa de res personal 2",
+                "Con lechuga, tomate y salsa rosada",
+                "Es domicilio, dirección Carrera 7 # 12-34",
+                "Pago con Nequi",
+                "Gracias",
+            ]
+ 
+        print("\n🧪 Probando el modelo...\n" + "=" * 55)
+        history = []
+        for q in questions:
+            history.append({"role": "user", "content": q})
+            response = client.chat.completions.create(
+                model=Config.GROQ_MODEL,
+                messages=[{"role": "system", "content": system_prompt}] + history,
+                max_tokens=400,
+                temperature=0.7,
             )
-
-        return dataset.map(tokenize, batched=True, remove_columns=["text"])
-
-    def train(self):
-        """Ejecuta el fine-tuning completo."""
-        (AutoTokenizer, AutoModelForCausalLM,
-         TrainingArguments, Trainer,
-         DataCollatorForLanguageModeling, Dataset) = self._load_dependencies()
-
-        print(f"\n[FineTuner] Cargando modelo base: {BASE_MODEL}")
-        tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
-        tokenizer.pad_token = tokenizer.eos_token
-
-        model = AutoModelForCausalLM.from_pretrained(BASE_MODEL)
-
-        print(f"[FineTuner] Cargando y tokenizando dataset: {self._dataset_path}")
-        tokenized_dataset = self._load_dataset_hf(tokenizer, Dataset)
-
-        # Dividir en train/eval (90/10)
-        split = tokenized_dataset.train_test_split(test_size=0.1, seed=42)
-
-        data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-
-        training_args = TrainingArguments(
-            output_dir=self._output_dir,
-            num_train_epochs=3,
-            per_device_train_batch_size=2,
-            per_device_eval_batch_size=2,
-            warmup_steps=10,
-            weight_decay=0.01,
-            logging_dir=os.path.join(self._output_dir, "logs"),
-            logging_steps=10,
-            eval_strategy="epoch",
-            save_strategy="epoch",
-            load_best_model_at_end=True,
-            report_to="none",           # sin wandb
-            
-        )
-
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=split["train"],
-            eval_dataset=split["test"],
-            data_collator=data_collator,
-        )
-
-        print(f"\n[FineTuner] 🚀 Iniciando entrenamiento ({len(split['train'])} ejemplos)...")
-        print("[FineTuner] ⏳ Esto puede tomar 5-15 minutos en CPU. Paciencia...")
-        trainer.train()
-
-        print(f"\n[FineTuner] 💾 Guardando modelo fine-tuneado en: {self._output_dir}")
-        trainer.save_model(self._output_dir)
-        tokenizer.save_pretrained(self._output_dir)
-
-        print(f"\n[FineTuner] ✅ Fine-tuning completado exitosamente!")
-        print(f"[FineTuner] Modelo guardado en: {self._output_dir}")
-        print(f"[FineTuner] Para usarlo en el bot, agrega USE_LOCAL_MODEL=true en tu .env")
-
-# ENTRY POINT
-
+            answer = response.choices[0].message.content.strip()
+            history.append({"role": "assistant", "content": answer})
+            print(f"👤 {q}")
+            print(f"🐶 {answer}")
+            print("-" * 55)
+ 
+ 
 def main():
-    parser = argparse.ArgumentParser(description="Fine-tuning de Armelo Perro Bot")
-    parser.add_argument("--generate", action="store_true", help="Solo genera el dataset JSONL")
-    parser.add_argument("--train", action="store_true", help="Entrena el modelo (requiere dataset)")
-    parser.add_argument("--both", action="store_true", help="Genera dataset y entrena (recomendado)")
+    parser = argparse.ArgumentParser(description="Fine-tuning Armelo Perro Bot")
+    parser.add_argument("--generate", action="store_true", help="Genera el dataset JSONL")
+    parser.add_argument("--test", action="store_true", help="Prueba el modelo con conversación")
     args = parser.parse_args()
-
-    if not any([args.generate, args.train, args.both]):
+ 
+    if not any(vars(args).values()):
         parser.print_help()
         return
-
-    if args.generate or args.both:
-        print("\n📝 Generando dataset de entrenamiento...")
-        generator = DatasetGenerator()
-        count = generator.save()
-        print(f"   → {count} ejemplos generados en training_data.jsonl")
-
-    if args.train or args.both:
-        if not Path(DATASET_PATH).exists():
-            print("❌ No se encontró training_data.jsonl. Ejecuta primero con --generate")
-            return
-        print("\n🤖 Iniciando fine-tuning del modelo...")
-        tuner = FineTuner()
-        tuner.train()
-
-
+ 
+    generator = DatasetGenerator()
+ 
+    if args.generate or args.test:
+        print("📝 Generando dataset...")
+        examples = generator.generate()
+        generator.save()
+        generator.stats(examples)
+ 
+    if args.test:
+        tuner = InContextFineTuner()
+        tuner.test_model()
+ 
+ 
 if __name__ == "__main__":
     main()
+ 
